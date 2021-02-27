@@ -49,12 +49,17 @@ void MainWindow::Get_Data(QString string){
         if ( pos >= 0 ){
             song = rx.cap(1);
             ui->songNameEdit->setText(song);
+        }else{
+            ui->songNameEdit->setText("song");
         }
+
         rx.setPattern("data-res-author=\"(.*)\"");
         pos = string.indexOf(rx);
         if ( pos >= 0 ){
             singer = rx.cap(1);
             ui->singerEdit->setText(singer);
+        }else{
+            ui->singerEdit->setText("singer");
         }
         first = false;
     }
@@ -76,10 +81,14 @@ void MainWindow::Get_Data(QString string){
             ui->Lrc->setText("无歌词...");
             return;
         }
-        QRegExp rx("\\[\\d.*\\]");
+        QRegExp rx("\[\\d.*\\]");
         rx.setMinimal(true);
-        raw_ = raw = lyric.toString();
+        QRegExp rx_reduce("\\d\\]");
+        rx_reduce.setMinimal(true);
+        raw = lyric.toString();
+        raw.replace(rx_reduce, "]"); //减少两位小数以适配 Walkman
         ui->Lrc->setText(raw);
+        raw_ = raw;
         raw_.replace(rx,"");
         //翻译
         if(jsonObject.find("tlyric") != jsonObject.end()){
@@ -91,7 +100,10 @@ void MainWindow::Get_Data(QString string){
                 trans_ = trans = "";
                 return;
             }
-            trans_ = trans = lyric.toString();
+            trans = lyric.toString();
+            trans.replace(rx_reduce, "]");
+            trans_ = trans;
+
             ui->Lrc->setText(raw + trans);
             trans_.replace(rx, "");
         }
@@ -127,7 +139,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 {
     if (event->modifiers() == Qt::ControlModifier){
         if(event->key() == Qt::Key_S){
-            if(singer.isEmpty() || song.isEmpty()) return;
+            /*if(singer.isEmpty() || song.isEmpty()) return;
 //            qDebug()<<singer<<song;
             QRegExp rx("/");
             int pos = singer.indexOf(rx);
@@ -136,6 +148,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
                 pos = singer.indexOf(rx);
 //                qDebug()<<pos;
             }
+            */
             path = QFileDialog::getSaveFileName(this, "Sava File", song+" - "+singer+".lrc", "*.lrc");
             if(path.isEmpty()){
                 return;
